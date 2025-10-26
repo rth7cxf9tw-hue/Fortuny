@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나만의 운세</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Jua', sans-serif;
+    background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .container {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+  }
+  input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+  }
+  button {
+    background: #ff6f91;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  button:hover {
+    background: #ff3f61;
+  }
+  .scroll-container {
+    display: flex;
+    overflow-x: auto;
+    margin-top: 20px;
+    padding-bottom: 10px;
+  }
+  .card {
+    min-width: 250px;
+    flex: 0 0 auto;
+    background: linear-gradient(135deg, #ffe29f, #ffa99f);
+    margin-right: 15px;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    color: #333;
+  }
+  .card h3 {
+    margin: 0 0 10px;
+    font-size: 20px;
+    font-family: 'Jua', sans-serif;
+    font-weight: normal;
+  }
+  .card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: 'Jua', sans-serif;
+  }
+  /* 스크롤바 숨기기 */
+  .scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+  .scroll-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>나만의 운세</h2>
+  <input type="date" id="birthday" placeholder="생년월일">
+  <select id="gender">
+    <option value="">성별 선택</option>
+    <option value="남">남</option>
+    <option value="여">여</option>
+  </select>
+  <button onclick="showFortune()">운세 보기</button>
+  <div class="scroll-container" id="result"></div>
+</div>
+
+<script>
+const fortunes = {
+  전체운: [
+    "오늘은 새로운 도전을 시작하기 좋은 날입니다. 작은 변화가 큰 기회로 이어질 수 있어요.",
+    "조금 피곤하고 지치는 하루가 될 수 있지만, 주변 사람의 도움을 받으면 극복할 수 있습니다.",
+    "계획한 일이 순조롭게 진행되며, 성취감을 느낄 수 있는 날입니다.",
+    "과거의 실수를 돌아보고 개선할 수 있는 기회가 생깁니다.",
+    "주변 사람과의 협력이 중요한 날입니다. 의견을 조율해보세요.",
+    "자신감을 가지고 행동하면 예상치 못한 성과를 얻을 수 있습니다.",
+    "마음이 편안해지는 순간이 찾아올 수 있으니 작은 행복을 즐기세요.",
+    "급한 결정보다는 차분히 계획을 세우는 것이 유리합니다.",
+    "오늘은 새로운 취미나 활동을 시작하기 좋은 날입니다.",
+    "조금은 여유로운 마음으로 하루를 보내면 뜻밖의 기쁨이 생깁니다."
+  ],
+  애정운: [
+    "사랑하는 사람과의 관계가 깊어지는 날입니다. 솔직한 대화가 중요해요.",
+    "새로운 만남이 예상되지만 성급한 결정은 피하세요.",
+    "서로의 감정을 이해하려는 노력이 필요합니다.",
+    "감정을 표현하면 상대방과 더 가까워질 수 있습니다.",
+    "관계에 작은 변화를 주면 새로운 활력이 생길 수 있습니다.",
+    "사랑보다는 우정이 중요한 날이 될 수 있어요.",
+    "연인과의 사소한 갈등은 대화로 해결할 수 있습니다.",
+    "오늘은 상대방에게 작은 선물을 해보는 것도 좋습니다.",
+    "솔로라면 호감 가는 사람과의 기회가 생길 수 있습니다.",
+    "감정에 휘둘리기보다는 진지하게 생각하는 것이 좋습니다."
+  ],
+  재물운: [
+    "금전적인 기회가 생기지만 신중하게 검토해야 합니다.",
+    "예상치 못한 지출이 발생할 수 있으니 계획을 잘 세우세요.",
+    "투자나 구매에 있어 직감이 좋은 날입니다.",
+    "오늘은 저축이나 계획적인 소비가 유리합니다.",
+    "작은 행운이 금전적으로 도움이 될 수 있습니다.",
+    "대출이나 계약은 신중하게 결정하세요.",
+    "소비보다는 미래를 위한 투자에 집중하면 좋습니다.",
+    "금전적인 정보에 관심을 가지면 기회를 잡을 수 있습니다.",
+    "사소한 돈 문제도 가족과 상의하면 해결이 쉽습니다.",
+    "과도한 욕심은 금전운을 해칠 수 있으니 조심하세요."
+  ],
+  금전운: [
+    "소소한 수익이 생길 수 있습니다. 작은 기쁨을 누리세요.",
+    "경제적 판단은 신중하게. 충동 구매는 피하는 것이 좋습니다.",
+    "금전적 이익이 예상되지만 나눔의 마음을 가지면 더 풍요로워집니다.",
+    "오늘은 계획하지 않은 지출이 생길 수 있어요.",
+    "투자에 있어서 직감을 믿어도 되는 날입니다.",
+    "주변 사람과의 재정 문제는 솔직히 이야기하세요.",
+    "소액의 절약이 큰 도움이 될 수 있습니다.",
+    "금전 약속은 문서화하는 것이 안전합니다.",
+    "기대 이상의 수익이 들어올 수 있는 기회가 있습니다.",
+    "지출은 계획적으로, 수익은 꾸준히 관리하세요."
+  ],
+  학업운: [
+    "공부에 집중하기 좋은 날입니다. 작은 목표부터 차근차근 달성하세요.",
+    "새로운 지식을 배우는 데 흥미가 생기고, 이해력이 높아집니다.",
+    "주의 산만해질 수 있으니 계획표를 활용하세요.",
+    "오늘은 반복 학습이 효과적인 날입니다.",
+    "혼자보다는 스터디 그룹과 함께 하면 효율이 높습니다.",
+    "질문을 주저하지 않고 선생님이나 친구에게 물어보세요.",
+    "작은 성취를 기록하면 동기부여가 됩니다.",
+    "오늘 배운 내용은 복습하는 것이 중요합니다.",
+    "새로운 분야에 도전해보면 흥미가 생길 수 있습니다.",
+    "집중력이 높으니 중요한 과제를 처리하기 좋습니다."
+  ],
+  건강운: [
+    "규칙적인 생활과 충분한 휴식이 필요합니다.",
+    "운동을 조금 더 하면 활력이 생길 수 있습니다.",
+    "스트레스 관리가 중요한 날이니 마음을 차분히 가지세요.",
+    "식사와 수분 섭취를 충분히 하세요.",
+    "무리한 운동보다는 가벼운 활동이 유익합니다.",
+    "마음 챙김이나 명상이 도움이 될 수 있습니다.",
+    "건강 검진이나 관리가 필요한 신호가 있을 수 있습니다.",
+    "충분한 수면으로 체력을 회복하세요.",
+    "작은 습관 변화가 건강에 큰 영향을 줄 수 있습니다.",
+    "자연 속에서 시간을 보내며 마음과 몸을 힐링하세요."
+  ]
+};
+
+// 문자열 → 숫자 해시
+function hashString(str) {
+  let hash = 0;
+  for(let i = 0; i < str.length; i++){
+    hash = (hash * 31 + str.charCodeAt(i)) % 1000000;
+  }
+  return hash;
+}
+
+function showFortune() {
+  const birthday = document.getElementById("birthday").value;
+  const gender = document.getElementById("gender").value;
+
+  if(!birthday || !gender) {
+    alert("생년월일과 성별을 모두 입력해주세요!");
+    return;
+  }
+
+  const container = document.getElementById("result");
+  container.innerHTML = "";
+
+  for (let key in fortunes) {
+    const arr = fortunes[key];
+    const index = hashString(birthday + gender + key) % arr.length;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `<h3>${key}</h3><p>${arr[index]}</p>`;
+    container.appendChild(card);
+  }
+}
+</script>
+</body>
+</html>
